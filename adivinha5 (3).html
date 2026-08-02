@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adivinha 5 — Jogo de Palavras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FAF7F0;
+    --bg-panel: #FFFFFF;
+    --ink: #1E2A38;
+    --ink-soft: #5B6B7A;
+    --indigo: #16324F;
+    --tile-correct: #2C5F8A;
+    --tile-correct-dark: #1F4766;
+    --tile-present: #C89B3C;
+    --tile-present-dark: #A67F2C;
+    --tile-absent: #ABA398;
+    --tile-absent-dark: #8F887E;
+    --border: #DCD5C7;
+    --white: #FFFFFF;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding-bottom: 40px;
+  }
+
+  /* Azulejo pattern strip — signature element */
+  .azulejo-strip{
+    width:100%;
+    height:14px;
+    background-image: repeating-linear-gradient(45deg, var(--indigo) 0 6px, transparent 6px 12px),
+                       repeating-linear-gradient(-45deg, var(--indigo) 0 6px, transparent 6px 12px);
+    background-color: #E8DFC8;
+    background-size: 24px 24px;
+    opacity:0.85;
+  }
+
+  header{
+    width:100%;
+    background: var(--indigo);
+    color: var(--white);
+    text-align:center;
+    padding: 28px 16px 22px;
+  }
+
+  header h1{
+    font-family:'Fraunces', serif;
+    font-weight:900;
+    font-size: clamp(32px, 6vw, 46px);
+    margin:0;
+    letter-spacing: 0.5px;
+  }
+
+  header h1 .five{
+    color: var(--tile-present);
+  }
+
+  header p{
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: #C7D3DE;
+    font-weight:500;
+  }
+
+  .mode-bar{
+    display:flex;
+    gap:10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+    justify-content:center;
+  }
+
+  .mode-btn{
+    font-family:'Inter', sans-serif;
+    font-weight:700;
+    font-size: 13px;
+    letter-spacing:0.3px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    background: transparent;
+    color: #E8E3D8;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .mode-btn.active{
+    background: var(--tile-present);
+    border-color: var(--tile-present);
+    color: var(--indigo);
+  }
+  .mode-btn:hover{ border-color: var(--tile-present); }
+
+  main{
+    width:100%;
+    max-width: 480px;
+    padding: 24px 16px 0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  #message{
+    min-height: 22px;
+    font-weight:700;
+    font-size: 14px;
+    color: var(--indigo);
+    background: #F0E9D6;
+    padding: 6px 14px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    opacity:0;
+    transition: opacity .2s ease;
+  }
+  #message.show{ opacity:1; }
+
+  #grid{
+    display:grid;
+    grid-template-rows: repeat(7, 1fr);
+    gap: 7px;
+    margin-bottom: 8px;
+  }
+
+  .row{
+    display:grid;
+    grid-template-columns: repeat(5, 54px);
+    gap: 7px;
+  }
+
+  .tile{
+    width:54px;
+    height:54px;
+    border: 2px solid var(--border);
+    background: var(--bg-panel);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size: 26px;
+    color: var(--ink);
+    border-radius: 6px;
+    text-transform:uppercase;
+    transition: transform .15s ease;
+  }
+
+  .tile.filled{ border-color: var(--ink-soft); }
+
+  .tile.pop{ animation: pop .1s ease; }
+  @keyframes pop{ 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+
+  .tile.flip{ animation: flip .5s ease forwards; }
+  @keyframes flip{
+    0%{ transform: rotateX(0deg); }
+    50%{ transform: rotateX(90deg); }
+    51%{ transform: rotateX(90deg); }
+    100%{ transform: rotateX(0deg); }
+  }
+
+  .tile.correct{ background: var(--tile-correct); border-color: var(--tile-correct-dark); color: var(--white); }
+  .tile.present{ background: var(--tile-present); border-color: var(--tile-present-dark); color: var(--white); }
+  .tile.absent{ background: var(--tile-absent); border-color: var(--tile-absent-dark); color: var(--white); }
+  .tile.guessed{ background: var(--indigo); border-color: var(--indigo); color: var(--white); }
+  .tile.editable{ cursor: pointer; }
+  .tile.cursor{ border-color: var(--tile-present); box-shadow: 0 0 0 2px var(--tile-present) inset; }
+
+  #newWordBtn{
+    display:none;
+    margin: 4px 0 10px;
+    font-family:'Inter', sans-serif;
+    font-weight:700;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--tile-present);
+    background: var(--tile-present);
+    color: var(--indigo);
+    cursor:pointer;
+  }
+  #newWordBtn.show{ display:inline-block; }
+  #newWordBtn:hover{ filter: brightness(1.05); }
+
+  .row-stats{
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight:600;
+    color: var(--ink-soft);
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    min-height: 14px;
+    padding-top:1px;
+  }
+  .row-stats span{ display:flex; align-items:center; gap:3px; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.c{ background: var(--tile-correct); }
+  .dot.p{ background: var(--tile-present); }
+  .dot.a{ background: var(--tile-absent); }
+
+  #keyboard{
+    margin-top: 18px;
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+    width:100%;
+    max-width: 480px;
+    align-items:center;
+  }
+
+  .krow{ display:flex; gap:6px; justify-content:center; width:100%; }
+
+  .key{
+    font-family:'Inter', sans-serif;
+    font-weight:700;
+    font-size: 13px;
+    border: none;
+    border-radius: 6px;
+    background: #E4DFD3;
+    color: var(--ink);
+    height: 46px;
+    min-width: 32px;
+    flex:1;
+    max-width: 40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: background .1s ease;
+    text-transform:uppercase;
+  }
+  .key:hover{ background: #D6CFBE; }
+  .key.wide{ max-width: 64px; font-size: 11px; flex:1.6; }
+
+  .key.used{ background: var(--ink-soft); color: var(--white); }
+
+  #stats-panel{
+    margin-top: 22px;
+    background: var(--bg-panel);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-align:center;
+    max-width: 400px;
+  }
+  #stats-panel b{ color: var(--indigo); }
+
+  footer{
+    margin-top: 26px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align:center;
+    padding: 0 20px;
+  }
+
+  @media (max-width: 380px){
+    .tile{ width: 46px; height:46px; font-size:22px; }
+    .row{ grid-template-columns: repeat(5, 46px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="azulejo-strip"></div>
+<header>
+  <h1>Adivinha<span class="five">5</span></h1>
+  <p>Descubra a palavra de 5 letras em 7 tentativas</p>
+  <div class="mode-bar">
+    <button class="mode-btn active" data-mode="daily" id="btnDaily">Desafio do dia</button>
+    <button class="mode-btn" data-mode="practice" id="btnPractice">Modo prático</button>
+  </div>
+</header>
+
+<main>
+  <div id="message"></div>
+  <button id="newWordBtn">🔀 Nova palavra (modo prático)</button>
+  <div id="grid"></div>
+
+  <div id="keyboard">
+    <div class="krow">
+      <button class="key" data-key="Q">Q</button><button class="key" data-key="W">W</button>
+      <button class="key" data-key="E">E</button><button class="key" data-key="R">R</button>
+      <button class="key" data-key="T">T</button><button class="key" data-key="Y">Y</button>
+      <button class="key" data-key="U">U</button><button class="key" data-key="I">I</button>
+      <button class="key" data-key="O">O</button><button class="key" data-key="P">P</button>
+    </div>
+    <div class="krow">
+      <button class="key" data-key="A">A</button><button class="key" data-key="S">S</button>
+      <button class="key" data-key="D">D</button><button class="key" data-key="F">F</button>
+      <button class="key" data-key="G">G</button><button class="key" data-key="H">H</button>
+      <button class="key" data-key="J">J</button><button class="key" data-key="K">K</button>
+      <button class="key" data-key="L">L</button>
+    </div>
+    <div class="krow">
+      <button class="key wide" data-key="ENTER">Enviar</button>
+      <button class="key" data-key="Z">Z</button><button class="key" data-key="X">X</button>
+      <button class="key" data-key="C">C</button><button class="key" data-key="V">V</button>
+      <button class="key" data-key="B">B</button><button class="key" data-key="N">N</button>
+      <button class="key" data-key="M">M</button>
+      <button class="key wide" data-key="BACK">⌫</button>
+    </div>
+  </div>
+
+  <div id="stats-panel">
+    <div id="statsText">Jogadas: <b>0</b> · Vitórias: <b>0</b> · Sequência: <b>0</b></div>
+  </div>
+
+  <footer>Feito para você jogar quantas vezes quiser no modo prático. O desafio do dia muda uma vez por dia.</footer>
+</main>
+
+<script>
+(function(){
+  const WORDS = ["SAGAZ", "AMAGO", "TERMO", "NEGRO", "EXITO", "MEXER", "NOBRE", "ETICA", "SENSO", "AFETO", 
+  "ALGOZ", "FAZER", "PLENA", "TENUE", "ASSIM", "SOBRE", "MUTUA", "AQUEM", "PODER", "SECAO", "VIGOR", "POREM", 
+  "SUTIL", "CERNE", "FOSSE", "IDEIA", "SANAR", "AUDAZ", "MORAL", "INATO", "QUICA", "MUITO", "JUSTO", "DESDE", 
+  "HONRA", "SONHO", "TORPE", "AMIGO", "RAZAO", "EGIDE", "ICONE", "ETNIA", "FUTIL", "ANEXO", "DENGO", "HAVER", 
+  "TANGE", "LAPSO", "ENTAO", "TEMPO", "EXPOR", "SEARA", "BOCAL", "SABER", "XIBIU", "GRACA", "HABIL", "MUTUO", 
+  "CASAL", "OBICE", "DIZER", "AVIDO", "ARDIL", "ESTAR", "PESAR", "DEVER", "CAUSA", "TENAZ", "AINDA", "SENDO", 
+  "TEMOR", "CRIVO", "BRADO", "PARIA", "COSER", "APICE", "GENRO", "COMUM", "ASSAZ", "PROLE", "POSSE", "CORJA", 
+  "ANIMO", "FUGAZ", "CEDER", "PAUTA", "CENSO", "DETEM", "CULTO", "ANSIA", "ATROZ", "DIGNO", "MUNDO", "FORTE", 
+  "MESMO", "VULGO", "VICIO", "SAUDE", "CRIAR", "TODOS", "GLEBA", "COZER", "REVES", "PUDOR", "DOGMA", "JEITO", 
+  "VALHA", "DENSO", "NENEM", "ORDEM", "LIMBO", "LOUCO", "ATRAS", "REGRA", "PEDIR", "HOMEM", "FELIZ", "AJUDA", 
+  "CLAVA", "USURA", "MERCE", "IMPOR", "BANAL", "COISA", "FALSO", "JUIZO", "ROUND", "LEGAL", "FORMA", "FALAR", 
+  "SABIO", "CERTO", "PROSA", "SERVO", "PRESA", "TENRO", "PIFIO", "POSSO", "DESSE", "HEROI", "CUNHO", "DEVIR", 
+  "FACIL", "VIRIL", "ONTEM", "VALOR", "VENDO", "VISAR", "LINDA", "MANSO", "EBRIO", "SERIO", "GUISA", "MAGOA", 
+  "ACASO", "IMPIO", "MEIGA", "PUDER", "FLUIR", "AFAGO", "LUGAR", "ABRIR", "REACA", "TEMER", "PLATO", "GARBO", 
+  "UNIAO", "PRAXE", "GERAR", "BURRO", "MATIZ", "OBTER", "OBVIO", "BRUMA", "CISMA", "VENIA", "EXODO", "AFINS", 
+  "ALIBI", "CRISE", "PLENO", "RITMO", "TEDIO", "FLUXO", "MORTE", "LEVAR", "SENIL", "OLHAR", "CASTA", "HAVIA", 
+  "TOMAR", "ENFIM", "VISAO", "OUVIR", "GENIO", "PARVO", "PRUMO", "CABAL", "PARCO", "BREGA", "FALTA", "RELES", 
+  "CALMA", "VITAL", "TECER", "OUTRO", "BRAVO", "FAVOR", "PULHA", "TERRA", "RETER", "VIVAZ", "VIVER", "FORCA", 
+  "AMENO", "SABIA", "UNICO", "TENDO", "LAICO", "NICHO", "PASSO", "VALIA", "ACHAR", "NOSSA", "GRATO", "CARMA", 
+  "PAPEL", "REVER", "NOCAO", "RANCO", "POBRE", "ROGAR", "POSSA", "DUBIO", "NOITE", "FARDO", "ATIVO", "FACAM", 
+  "PRIME", "COESO", "FARSA", "EPICO", "FATOR", "ANELO", "CLARO", "LEIGO", "LIDER", "SESTA", "SELAR", "VAZIO", 
+  "OBITO", "CIUME", "CISAO", "FICAR", "SONSO", "CESTA", "DETER", "CITAR", "ATUAR", "SINTO", "GENTE", "VELHO", 
+  "FONTE", "HASTE", "PONTO", "ADIAR", "HUMOR", "TENDE", "REVEL", "IDEAL", "SENAO", "SULCO", "LABOR", "ARDUO", 
+  "TERNO", "REMIR", "MARCO", "IGUAL", "HIATO", "FEIXE", "EXATO", "CAPAZ", "AMPLO", "DEBIL", "TANTO", "CICLO", 
+  "RELVA", "LAVRA", "VEMOS", "CAUDA", "TENRA", "INATA", "RAIVA", "JOVEM", "CHUVA", "VARAO", "OTICA", "CACAR", 
+  "POUCO", "GESTO", "AMBOS", "TOADA", "VELAR", "SONSA", "APOIO", "SERIE", "COCAR", "VACUO", "XEQUE", "IMUNE", 
+  "ALGUM", "FARAO", "FEITO", "HORDA", "VIMOS", "CARRO", "FUSAO", "ENTRE", "SORTE", "ADVEM", "LEITO", "COESA", 
+  "PROBO", "MINHA", "TRAMA", "CRUEL", "SENTE", "DOIDO", "ANUIR", "LAZER", "FRASE", "BRISA", "IMPAR", "VERSO", 
+  "BLASE", "CHATA", "RIGOR", "PEGAR", "MASSA", "AUREA", "SEITA", "MAIOR", "TORCO", "PRECE", "BOTAR", "SAIBA", 
+  "DORSO", "AGORA", "LIVRO", "MOCAO", "SIGNO", "FUROR", "FAUNA", "PLANO", "VETOR", "LIAME", "COMER", "OCASO", 
+  "SENDA", "COVIL", "PRESO", "CREDO", "CASTO", "FLORA", "PECHA", "PRAIA", "MORAR", "NUNCA", "FAINA", "ALIAS", 
+  "DOCIL", "ADEUS", "HOUVE", "PESTE", "MUDAR", "ARDOR", "MANHA", "PARTE", "ARIDO", "SETOR", "AMBAS", "PEIXE", 
+  "ANTRO", "RISCO", "INDIO", "REZAR", "VISSE", "PAJEM", "ESTAO", "GRUPO", "JUNTO", "VULTO", "AVARO", "CAMPO", 
+  "SALVO", "VIRUS", "OTIMO", "MESES", "SAIDA", "BEATA", "BREVE", "VASTO", "ANTES", "CONTA", "ACESO", "MORRO", 
+  "SINAL", "VERBO", "ANDAR", "ANAIS", "OXALA", "LENDA", "REGER", "PRADO", "AUREO", "BANZO", "FUGIR", "ACIMA", 
+  "SERAO", "OPCAO", "FESTA", "VILAO", "CHULO", "RAPAZ", "NACAO", "TEXTO", "LEITE", "SEGUE", "MOTIM", "BIRRA", 
+  "FRUIR", "TIRAR", "BONUS", "TRETA", "PARAR", "ATRIO", "FITAR", "BRAVA", "IDOLO", "JAZIA", "PUXAR", "TURBA", 
+  "FILHO", "ALUDE", "TOSCO", "ATOMO", "GERIR", "TENSO", "REINO", "PROVA", "PRAZO", "NORMA", "TRAGA", "MANHA", 
+  "EXAME", "EPOCA", "VORAZ", "CORPO", "ACESA", "LIGAR", "CHEIO", "SARCA", "NOSSO", "PRETO", "MALTA", "MAGIA", 
+  "BANDO", "AONDE", "COPIA", "ARCAR", "QUASE", "VENAL", "LOGRO", "FATOS", "LONGE", "SINHA", "AVIAO", "AFORA", 
+  "FATAL", "ANCIA", "PSICO", "DESSA", "SEXTA", "PRAGA", "CERTA", "FIXAR", "NIVEL", "OASIS", "QUOTA", "GLOSA", 
+  "MENTE", "APELO", "MESSE", "NODOA", "LIDAR", "APEGO", "POMPA", "VERVE", "PERDA", "PARCA", "TOCAR", "CAIXA", 
+  "COITO", "JIRAU", "ALADO", "LIVRE", "FRACO", "SUMIR", "PORTA", "TINHA", "VEZES", "GRAVE", "FIRME", "SOLDO", 
+  "LINDO", "BATER", "OPACO", "CANON", "SOLTO", "IRMAO", "BESTA", "FAIXA", "ASTRO", "SALVE", "ATUAL", "SABIA", 
+  "ELITE", "TRUPE", "TURVA", "DOIDO", "NAVIO", "SUPRA", "VIRAO", "FENDA", "DEIXA", "CIOSO", "JUNCO", "GRATA", 
+  "ALCAR", "CURSO", "PARDO", "CHATO", "AUTOR", "PIQUE", "BIOMA", "PARVA", "DOUTO", "EXIJO", "BICHO", "PAGAO", 
+  "MACIO", "ALUNO", "DESTA", "ETICO", "VIRIA", "MENOS", "RESES", "COUSA", "CABER", "VIDEO", "CULPA", "CALDA", 
+  "POSTO", "RADIO", "FICHA", "ABUSO", "LOCUS", "LAPIS", "SUPOR", "ZELAR", "GOSTO", "JUDEU", "SUPER", "SUAVE", 
+  "CALAO", "ADVIR", "VERBA", "AGUDO", "DROPS", "EXTRA", "JULIA", "BAIXO", "MOLHO", "RETEM", "TORSO", "PIADA", 
+  "PRIVE", "FACHO", "SITIO", "PEITO", "RUINA", "TURMA", "VINHA", "VOSSO", "PASSA", "IGNEO", "TRACO", "PODIO", 
+  "ASILO", "AVIDA", "PILAR", "ESTIO", "ORFAO", "COMBO", "LIGHT", "CHAMA", "TURVO", "MOSTO", "MUSEU", "PAREO", 
+  "ACOES", "LOUCA", "REFEM", "POETA", "AMENA", "LASSO", "ACOLA", "PISAR", "LOCAL", "OPTAR", "BRABO", "MESMA", 
+  "MEDIR", "FOREM", "BUSCA", "DRAMA", "TESTE", "MEIGO", "ERETO", "METIE", "FINDA", "POEMA", "CLIMA", "TENTO", 
+  "AVISO", "GERAL", "FOLGA", "CUTIS", "HOBBY", "AUTOS", "CORAL", "SURJA", "FACTO", "COCHO", "AMIGA", "RUMOR", 
+  "FEROZ", "ROUCA", "PEDRA", "TACHA", "CALMO", "IDOSO", "PAIRA", "CETRO", "RUBRO", "BOATO", "VOLTA", "PACTO", 
+  "URGIA", "ACUDE", "LICAO", "GOLPE", "MOVEL", "MONGE", "CRIME", "FEUDO", "MANGA", "ECOAR", "ATEIA", "CORSO", 
+  "EBANO", "DAQUI", "RISTE", "CARTA", "CLEAN", "ARTUR", "CASAR", "FALHA", "PONHA", "TETRA", "NATAL", "BENCA", 
+  "MONTE", "SALDO", "ESCOL", "VERDE", "AROMA", "CONTO", "CACHO", "BRIGA", "VETAR", "ITENS", "TARDE", "HOSTE", 
+  "VIGIA", "GRAMA", "FORUM", "PLUMO", "TRIBO", "MANGA", "PASMO", "ORNAR", "AMADA", "VENTO", "LETAL", "TROCA", 
+  "FAZIA", "PEDRO", "SOSIA", "SUCIA", "CHEFE", "UNICA", "CIVIL", "RIVAL", "UTEIS", "FRUTO", "NUVEM", "ORGAO", 
+  "PINHO", "TCHAU", "JOGAR", "PLAGA", "ROUPA", "VENHA", "SARAU", "VAZAO", "JEJUM", "ATIMO", "AREIA", "PLEBE", 
+  "PENTA", "BERRO", "VIRAR", "ARADO", "NESSE", "CARGO", "SWING", "SEIXO", "MIDIA", "COVER", "PERTO", "FOSSO", 
+  "CATRE", "MACRO", "LESSE", "STAND", "GIRIA", "MAGNA", "BRUTO", "ROCHA", "TODAS", "TUTOR", "VAROA", "LEGUA", 
+  "BEIJO", "AXILA", "TICAO", "TIVER", "CALOR", "TROCA", "FINJO", "INTER", "FARTA", "RENDA", "POMAR", "ASSAR", 
+  "TENHA", "BRUTA", "GABAR", "TRAJE", "SANTO", "DESTE", "ARFAR", "CLOSE", "XUCRO", "VADIO", "DANCA", "TRATO", 
+  "SURTO", "ESTRO", "PORTE", "AMADO", "AMBAR", "NESSA", "GURIA", "VERAO", "LOGOS", "SILVO", "PERCO", "RURAL", 
+  "ODIAR", "CHULA", "VIRAM", "FEITA", "AGAPE", "CENHO", "AVIAR", "MAMAE", "DEPOR", "VISTA", "LAUDO", "CANTO", 
+  "MARCA", "NEGAR", "NESTA", "VEDAR", "ETAPA", "QUAIS", "GROTA", "BAZAR", "FOSSA", "BOLSA", "MINAR", "SALMO", 
+  "CERCA", "PAVOR", "DENSA", "CHEIA", "CANSO", "CIFRA", "COROA", "RECEM", "URDIR", "REGIO", "IRADO", "CLERO", 
+  "VISTO", "VAGAR", "CINTO", "BURRA", "LETRA", "JAZER", "HORTO", "ESGAR", "RUIDO", "FERPA", "SOFIA", "INVES", 
+  "LARGO", "BUCHO", "FOLHA", "SIMIO", "MOLDE", "PROTO", "SEGAR", "SOTAO", "LESAO", "FINAL", "PAIOL", "PUGNA", 
+  "UBERE", "TRAGO", "FUNDO", "PENSO", "VELHA", "FAROL", "QUEDA", "LESTO", "MORFO", "ALAMO", "NARCO", "VASTA", 
+  "UFANO", "LINHA", "ARDIS", "OLHOS", "TROCO", "CEITA", "PASMA", "APEAR", "PICHE", "PODAR", "FOLIA", "DERAM", 
+  "PRECO", "POLIS", "AUDIO", "UMIDO", "BULIR", "VIGER", "TROCO", "FROTA", "OUTRA", "MOCHO", "PEITA", "NESTE", 
+  "CHAVE", "DISSO", "MONTA", "MATAR", "ILESO", "COSMO", "RESTO", "SEIVA", "MANTO", "CHAGA", "REDOR", "SACAR", 
+  "FALSA", "RETRO", "BARRO", "MOVER", "MISTO", "BOLSO", "LIMPO", "BEDEL", "LABIA", "VAZIA", "CIVEL", "CAMPA", 
+  "LOUCA", "VELOZ", "NARIZ", "LOURO", "LONGO", "SAMBA", "BARAO", "TOQUE", "LOGIA", "NACAR", "SABOR", "DADOS", 
+  "ALBUM", "LUTAR", "MIMAR", "JUSTA", "ZUMBI", "AXIAL", "LUCRO", "MACHO", "GEMER", "BANTO", "COEVO", "PAGAR", 
+  "PORCA", "DIABO", "RENTE", "PUNHA", "ARROZ", "ENJOO", "SUBIR", "CALCA", "URGIR", "FARTO", "SALVA", "XAMPU", 
+  "FINDO", "LOUSA", "CALVO", "VENHO", "VALER", "FOCAR", "PLUMA", "BAIXA", "FATUO", "OUSAR", "SABIA", "BRUXA", 
+  "SEXTO", "PULAR", "FIRMA", "HIFEN", "REPOR", "SIGLA", "TORNA", "FORRO", "LENTO", "CORTE", "CARDO", "BUGRE", 
+  "SOLTA", "CHOCA", "FEIRA", "GUETO", "VOILA", "RELER", "MANIA", "CUSTO", "TENIS", "CORAR", "NESGA", "FUGIU", 
+  "VARIO", "FAZES", "SADIO", "DEMAO", "CANIL", "FERIR", "RACIO", "VERSA", "HAREM", "MODAL", "SOCIO", "PUIDO", 
+  "SUGAR", "MIOPE", "DIGNA", "CEIFA", "PATIO", "TUMBA", "ABRIL", "ADORO", "AGUIA", "ALEGA", "ANEXA", "ANJOS", 
+  "ARENA", "ARMAR", "ATLAS", "AVISA", "BALDE", "BANCO", "BANHO", "BARCO", "BATOM", "BEBER", "BOLAS", "BONDE", 
+  "BRACO", "CABRA", "CINCO", "COBRA", "DEDOS", "DEUSA", "ELMOS", "FERRO", "FRUTA", "FUMAR", "GATOS", "HORAS",
+  "ILHAS", "LAGOA", "LARGA", "MAPAS", "MARES", "MESAS", "METAL", "MOEDA", "NADAR", "PADRE", "PALCO", "PONTE", 
+  "PRATO", "SALTO", "SERRA", "TIGRE", "TORRE", "TRAVA", "TRIGO", "VIDRO", "VIOLA", "VOZES", "ZEBRA"];
+
+
+  const MAX_TRIES = 7;
+  const WORD_LEN = 5;
+
+  let mode = "daily";
+  let answer = "";
+  let guesses = [];
+  let currentGuess = new Array(WORD_LEN).fill("");
+  let cursorPos = 0;
+  let gameOver = false;
+  let keyState = {};
+  let lastPracticeWord = "";
+
+  let stats = { played:0, won:0, streak:0 };
+
+  function pickDailyWord(){
+    const epoch = new Date(2024,0,1);
+    const today = new Date();
+    const diffDays = Math.floor((today - epoch) / 86400000);
+    return WORDS[diffDays % WORDS.length];
+  }
+
+  function pickRandomWord(){
+    let word = WORDS[Math.floor(Math.random() * WORDS.length)];
+    let attempts = 0;
+    while(word === lastPracticeWord && attempts < 10){
+      word = WORDS[Math.floor(Math.random() * WORDS.length)];
+      attempts++;
+    }
+    lastPracticeWord = word;
+    return word;
+  }
+
+  function normalize(s){
+    return s.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function startGame(newMode){
+    mode = newMode;
+    answer = mode === "daily" ? pickDailyWord() : pickRandomWord();
+    guesses = [];
+    currentGuess = new Array(WORD_LEN).fill("");
+    cursorPos = 0;
+    gameOver = false;
+    keyState = {};
+    document.getElementById("btnDaily").classList.toggle("active", mode === "daily");
+    document.getElementById("btnPractice").classList.toggle("active", mode === "practice");
+    document.getElementById("newWordBtn").classList.toggle("show", mode === "practice");
+    buildGrid();
+    resetKeyboardColors();
+    showMessage("");
+    render();
+  }
+
+  function buildGrid(){
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    for(let r=0; r<MAX_TRIES; r++){
+      const row = document.createElement("div");
+      row.className = "row";
+      row.id = "row-" + r;
+      for(let c=0; c<WORD_LEN; c++){
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.id = "tile-" + r + "-" + c;
+        tile.addEventListener("click", () => selectTile(r, c));
+        row.appendChild(tile);
+      }
+      const statsRow = document.createElement("div");
+      statsRow.className = "row-stats";
+      statsRow.id = "stats-" + r;
+      row.appendChild(statsRow);
+      grid.appendChild(row);
+    }
+  }
+
+  function evaluateGuess(guess){
+    const result = new Array(WORD_LEN).fill("absent");
+    const answerArr = answer.split("");
+    const guessArr = guess.split("");
+    const used = new Array(WORD_LEN).fill(false);
+
+    for(let i=0; i<WORD_LEN; i++){
+      if(guessArr[i] === answerArr[i]){
+        result[i] = "correct";
+        used[i] = true;
+      }
+    }
+    for(let i=0; i<WORD_LEN; i++){
+      if(result[i] === "correct") continue;
+      for(let j=0; j<WORD_LEN; j++){
+        if(!used[j] && guessArr[i] === answerArr[j]){
+          result[i] = "present";
+          used[j] = true;
+          break;
+        }
+      }
+    }
+    return result;
+  }
+
+  function render(){
+    guesses.forEach((g, r) => {
+      const result = evaluateGuess(g.word);
+      let counts = {correct:0, present:0, absent:0};
+      for(let c=0; c<WORD_LEN; c++){
+        const tile = document.getElementById("tile-" + r + "-" + c);
+        tile.textContent = g.word[c];
+        tile.classList.remove("editable", "cursor");
+        tile.classList.add("filled");
+        if(g.revealed){
+          tile.classList.add("guessed");
+        }
+        counts[result[c]]++;
+      }
+      if(g.revealed){
+        document.getElementById("stats-" + r).innerHTML =
+          `<span><span class="dot c"></span>${counts.correct} na posição certa</span>` +
+          `<span><span class="dot p"></span>${counts.present} na posição errada</span>` +
+          `<span><span class="dot a"></span>${counts.absent} não estão na palavra</span>`;
+      }
+    });
+
+    const activeRow = guesses.length;
+    if(activeRow < MAX_TRIES && !gameOver){
+      for(let c=0; c<WORD_LEN; c++){
+        const tile = document.getElementById("tile-" + activeRow + "-" + c);
+        if(tile){
+          tile.textContent = currentGuess[c] || "";
+          tile.classList.toggle("filled", !!currentGuess[c]);
+          tile.classList.add("editable");
+          tile.classList.toggle("cursor", c === cursorPos);
+        }
+      }
+    }
+
+    updateKeyboardColors();
+    updateStatsPanel();
+  }
+
+  function selectTile(r, c){
+    if(gameOver) return;
+    if(r !== guesses.length) return; // só a linha atual pode ser editada
+    cursorPos = c;
+    render();
+  }
+
+  function updateKeyboardColors(){
+    document.querySelectorAll(".key[data-key]").forEach(btn => {
+      const k = btn.dataset.key;
+      if(k.length === 1 && keyState[k]){
+        btn.classList.add("used");
+      }
+    });
+  }
+
+  function resetKeyboardColors(){
+    document.querySelectorAll(".key[data-key]").forEach(btn => {
+      btn.classList.remove("used");
+    });
+  }
+
+  function updateStatsPanel(){
+    document.getElementById("statsText").innerHTML =
+      `Jogadas: <b>${stats.played}</b> · Vitórias: <b>${stats.won}</b> · Sequência: <b>${stats.streak}</b>`;
+  }
+
+  function showMessage(text, sticky){
+    const el = document.getElementById("message");
+    el.textContent = text;
+    if(!text){ el.classList.remove("show"); return; }
+    el.classList.add("show");
+    if(!sticky){
+      clearTimeout(showMessage._t);
+      showMessage._t = setTimeout(() => { el.classList.remove("show"); }, 1800);
+    }
+  }
+
+  function submitGuess(){
+    if(gameOver) return;
+    if(currentGuess.some(l => !l)){
+      showMessage("Preencha as 5 letras antes de enviar.");
+      shakeRow(guesses.length);
+      return;
+    }
+    const word = currentGuess.join("");
+    for(let i=0; i<WORD_LEN; i++){
+      keyState[word[i]] = "used";
+    }
+    guesses.push({ word, revealed:true });
+    currentGuess = new Array(WORD_LEN).fill("");
+    cursorPos = 0;
+    render();
+    animateRowFlip(guesses.length - 1);
+
+    if(word === answer){
+      gameOver = true;
+      stats.played++; stats.won++; stats.streak++;
+      updateStatsPanel();
+      setTimeout(() => showMessage("Muito bem! A palavra era " + answer + ".", true), 550);
+    } else if(guesses.length >= MAX_TRIES){
+      gameOver = true;
+      stats.played++; stats.streak = 0;
+      updateStatsPanel();
+      setTimeout(() => showMessage("Não foi dessa vez. A palavra era " + answer + ".", true), 550);
+    }
+  }
+
+  function shakeRow(r){
+    const row = document.getElementById("row-" + r);
+    if(!row) return;
+    row.style.transform = "translateX(-4px)";
+    setTimeout(() => { row.style.transform = "translateX(4px)"; }, 60);
+    setTimeout(() => { row.style.transform = "translateX(0)"; }, 120);
+  }
+
+  function animateRowFlip(r){
+    for(let c=0; c<WORD_LEN; c++){
+      const tile = document.getElementById("tile-" + r + "-" + c);
+      tile.style.animationDelay = (c * 90) + "ms";
+      tile.classList.add("flip");
+    }
+  }
+
+  function nextEmptyFrom(pos){
+    for(let i=pos; i<WORD_LEN; i++){
+      if(!currentGuess[i]) return i;
+    }
+    for(let i=0; i<WORD_LEN; i++){
+      if(!currentGuess[i]) return i;
+    }
+    return Math.min(pos, WORD_LEN - 1);
+  }
+
+  function handleKey(k){
+    if(gameOver) return;
+    if(k === "ENTER"){
+      submitGuess();
+    } else if(k === "BACK" || k === "BACKSPACE"){
+      if(currentGuess[cursorPos]){
+        currentGuess[cursorPos] = "";
+      } else if(cursorPos > 0){
+        cursorPos--;
+        currentGuess[cursorPos] = "";
+      }
+      render();
+    } else if(/^[A-Z]$/.test(k)){
+      currentGuess[cursorPos] = k;
+      const filledPos = cursorPos;
+      cursorPos = nextEmptyFrom(cursorPos + 1);
+      render();
+      const tile = document.getElementById("tile-" + guesses.length + "-" + filledPos);
+      if(tile){ tile.classList.add("pop"); setTimeout(() => tile.classList.remove("pop"), 100); }
+    }
+  }
+
+  function moveCursor(delta){
+    if(gameOver) return;
+    if(guesses.length >= MAX_TRIES) return;
+    cursorPos = Math.max(0, Math.min(WORD_LEN - 1, cursorPos + delta));
+    render();
+  }
+
+  document.querySelectorAll(".key[data-key]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      handleKey(btn.dataset.key);
+      btn.blur();
+    });
+  });
+
+  document.addEventListener("keydown", (e) => {
+    let k = e.key.toUpperCase();
+    if(k === "ENTER"){
+      e.preventDefault();
+      handleKey("ENTER");
+    } else if(k === "BACKSPACE"){
+      e.preventDefault();
+      handleKey("BACK");
+    } else if(e.key === "ArrowLeft"){
+      e.preventDefault();
+      moveCursor(-1);
+    } else if(e.key === "ArrowRight"){
+      e.preventDefault();
+      moveCursor(1);
+    } else {
+      k = normalize(k);
+      if(/^[A-Z]$/.test(k)) handleKey(k);
+    }
+  });
+
+  document.getElementById("btnDaily").addEventListener("click", (e) => { startGame("daily"); e.currentTarget.blur(); });
+  document.getElementById("btnPractice").addEventListener("click", (e) => { startGame("practice"); e.currentTarget.blur(); });
+  document.getElementById("newWordBtn").addEventListener("click", (e) => { startGame("practice"); e.currentTarget.blur(); });
+
+  startGame("daily");
+})();
+</script>
+</body>
+</html>
