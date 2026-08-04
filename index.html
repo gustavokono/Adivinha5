@@ -288,6 +288,9 @@
   <div id="message"></div>
   <button id="newWordBtn">🔀 Nova palavra (modo prático)</button>
   <div id="grid"></div>
+  <input id="hiddenInput" type="text" autocomplete="off" autocorrect="off"
+    autocapitalize="characters" spellcheck="false" inputmode="text" maxlength="1"
+    style="position:absolute; opacity:0; height:1px; width:1px; border:none; padding:0; margin:0; pointer-events:none;">
 
   <div id="keyboard">
     <div class="krow">
@@ -323,94 +326,99 @@
 
 <script>
 (function(){
-  const WORDS = ["SAGAZ", "AMAGO", "TERMO", "NEGRO", "EXITO", "MEXER", "NOBRE", "ETICA", "SENSO", "AFETO", 
-  "ALGOZ", "FAZER", "PLENA", "TENUE", "ASSIM", "SOBRE", "MUTUA", "AQUEM", "PODER", "SECAO", "VIGOR", "POREM", 
-  "SUTIL", "CERNE", "FOSSE", "IDEIA", "SANAR", "AUDAZ", "MORAL", "INATO", "QUICA", "MUITO", "JUSTO", "DESDE", 
-  "HONRA", "SONHO", "TORPE", "AMIGO", "RAZAO", "EGIDE", "ICONE", "ETNIA", "FUTIL", "ANEXO", "DENGO", "HAVER", 
-  "TANGE", "LAPSO", "ENTAO", "TEMPO", "EXPOR", "SEARA", "BOCAL", "SABER", "XIBIU", "GRACA", "HABIL", "MUTUO", 
-  "CASAL", "OBICE", "DIZER", "AVIDO", "ARDIL", "ESTAR", "PESAR", "DEVER", "CAUSA", "TENAZ", "AINDA", "SENDO", 
-  "TEMOR", "CRIVO", "BRADO", "PARIA", "COSER", "APICE", "GENRO", "COMUM", "ASSAZ", "PROLE", "POSSE", "CORJA", 
-  "ANIMO", "FUGAZ", "CEDER", "PAUTA", "CENSO", "DETEM", "CULTO", "ANSIA", "ATROZ", "DIGNO", "MUNDO", "FORTE", 
-  "MESMO", "VULGO", "VICIO", "SAUDE", "CRIAR", "TODOS", "GLEBA", "COZER", "REVES", "PUDOR", "DOGMA", "JEITO", 
-  "VALHA", "DENSO", "NENEM", "ORDEM", "LIMBO", "LOUCO", "ATRAS", "REGRA", "PEDIR", "HOMEM", "FELIZ", "AJUDA", 
-  "CLAVA", "USURA", "MERCE", "IMPOR", "BANAL", "COISA", "FALSO", "JUIZO", "ROUND", "LEGAL", "FORMA", "FALAR", 
-  "SABIO", "CERTO", "PROSA", "SERVO", "PRESA", "TENRO", "PIFIO", "POSSO", "DESSE", "HEROI", "CUNHO", "DEVIR", 
-  "FACIL", "VIRIL", "ONTEM", "VALOR", "VENDO", "VISAR", "LINDA", "MANSO", "EBRIO", "SERIO", "GUISA", "MAGOA", 
-  "ACASO", "IMPIO", "MEIGA", "PUDER", "FLUIR", "AFAGO", "LUGAR", "ABRIR", "REACA", "TEMER", "PLATO", "GARBO", 
-  "UNIAO", "PRAXE", "GERAR", "BURRO", "MATIZ", "OBTER", "OBVIO", "BRUMA", "CISMA", "VENIA", "EXODO", "AFINS", 
-  "ALIBI", "CRISE", "PLENO", "RITMO", "TEDIO", "FLUXO", "MORTE", "LEVAR", "SENIL", "OLHAR", "CASTA", "HAVIA", 
-  "TOMAR", "ENFIM", "VISAO", "OUVIR", "GENIO", "PARVO", "PRUMO", "CABAL", "PARCO", "BREGA", "FALTA", "RELES", 
-  "CALMA", "VITAL", "TECER", "OUTRO", "BRAVO", "FAVOR", "PULHA", "TERRA", "RETER", "VIVAZ", "VIVER", "FORCA", 
-  "AMENO", "SABIA", "UNICO", "TENDO", "LAICO", "NICHO", "PASSO", "VALIA", "ACHAR", "NOSSA", "GRATO", "CARMA", 
-  "PAPEL", "REVER", "NOCAO", "RANCO", "POBRE", "ROGAR", "POSSA", "DUBIO", "NOITE", "FARDO", "ATIVO", "FACAM", 
-  "PRIME", "COESO", "FARSA", "EPICO", "FATOR", "ANELO", "CLARO", "LEIGO", "LIDER", "SESTA", "SELAR", "VAZIO", 
-  "OBITO", "CIUME", "CISAO", "FICAR", "SONSO", "CESTA", "DETER", "CITAR", "ATUAR", "SINTO", "GENTE", "VELHO", 
-  "FONTE", "HASTE", "PONTO", "ADIAR", "HUMOR", "TENDE", "REVEL", "IDEAL", "SENAO", "SULCO", "LABOR", "ARDUO", 
-  "TERNO", "REMIR", "MARCO", "IGUAL", "HIATO", "FEIXE", "EXATO", "CAPAZ", "AMPLO", "DEBIL", "TANTO", "CICLO", 
-  "RELVA", "LAVRA", "VEMOS", "CAUDA", "TENRA", "INATA", "RAIVA", "JOVEM", "CHUVA", "VARAO", "OTICA", "CACAR", 
-  "POUCO", "GESTO", "AMBOS", "TOADA", "VELAR", "SONSA", "APOIO", "SERIE", "COCAR", "VACUO", "XEQUE", "IMUNE", 
-  "ALGUM", "FARAO", "FEITO", "HORDA", "VIMOS", "CARRO", "FUSAO", "ENTRE", "SORTE", "ADVEM", "LEITO", "COESA", 
-  "PROBO", "MINHA", "TRAMA", "CRUEL", "SENTE", "DOIDO", "ANUIR", "LAZER", "FRASE", "BRISA", "IMPAR", "VERSO", 
-  "BLASE", "CHATA", "RIGOR", "PEGAR", "MASSA", "AUREA", "SEITA", "MAIOR", "TORCO", "PRECE", "BOTAR", "SAIBA", 
-  "DORSO", "AGORA", "LIVRO", "MOCAO", "SIGNO", "FUROR", "FAUNA", "PLANO", "VETOR", "LIAME", "COMER", "OCASO", 
-  "SENDA", "COVIL", "PRESO", "CREDO", "CASTO", "FLORA", "PECHA", "PRAIA", "MORAR", "NUNCA", "FAINA", "ALIAS", 
-  "DOCIL", "ADEUS", "HOUVE", "PESTE", "MUDAR", "ARDOR", "MANHA", "PARTE", "ARIDO", "SETOR", "AMBAS", "PEIXE", 
-  "ANTRO", "RISCO", "INDIO", "REZAR", "VISSE", "PAJEM", "ESTAO", "GRUPO", "JUNTO", "VULTO", "AVARO", "CAMPO", 
-  "SALVO", "VIRUS", "OTIMO", "MESES", "SAIDA", "BEATA", "BREVE", "VASTO", "ANTES", "CONTA", "ACESO", "MORRO", 
-  "SINAL", "VERBO", "ANDAR", "ANAIS", "OXALA", "LENDA", "REGER", "PRADO", "AUREO", "BANZO", "FUGIR", "ACIMA", 
-  "SERAO", "OPCAO", "FESTA", "VILAO", "CHULO", "RAPAZ", "NACAO", "TEXTO", "LEITE", "SEGUE", "MOTIM", "BIRRA", 
-  "FRUIR", "TIRAR", "BONUS", "TRETA", "PARAR", "ATRIO", "FITAR", "BRAVA", "IDOLO", "JAZIA", "PUXAR", "TURBA", 
-  "FILHO", "ALUDE", "TOSCO", "ATOMO", "GERIR", "TENSO", "REINO", "PROVA", "PRAZO", "NORMA", "TRAGA", "MANHA", 
-  "EXAME", "EPOCA", "VORAZ", "CORPO", "ACESA", "LIGAR", "CHEIO", "SARCA", "NOSSO", "PRETO", "MALTA", "MAGIA", 
-  "BANDO", "AONDE", "COPIA", "ARCAR", "QUASE", "VENAL", "LOGRO", "FATOS", "LONGE", "SINHA", "AVIAO", "AFORA", 
-  "FATAL", "ANCIA", "PSICO", "DESSA", "SEXTA", "PRAGA", "CERTA", "FIXAR", "NIVEL", "OASIS", "QUOTA", "GLOSA", 
-  "MENTE", "APELO", "MESSE", "NODOA", "LIDAR", "APEGO", "POMPA", "VERVE", "PERDA", "PARCA", "TOCAR", "CAIXA", 
-  "COITO", "JIRAU", "ALADO", "LIVRE", "FRACO", "SUMIR", "PORTA", "TINHA", "VEZES", "GRAVE", "FIRME", "SOLDO", 
-  "LINDO", "BATER", "OPACO", "CANON", "SOLTO", "IRMAO", "BESTA", "FAIXA", "ASTRO", "SALVE", "ATUAL", "SABIA", 
-  "ELITE", "TRUPE", "TURVA", "DOIDO", "NAVIO", "SUPRA", "VIRAO", "FENDA", "DEIXA", "CIOSO", "JUNCO", "GRATA", 
-  "ALCAR", "CURSO", "PARDO", "CHATO", "AUTOR", "PIQUE", "BIOMA", "PARVA", "DOUTO", "EXIJO", "BICHO", "PAGAO", 
-  "MACIO", "ALUNO", "DESTA", "ETICO", "VIRIA", "MENOS", "RESES", "COUSA", "CABER", "VIDEO", "CULPA", "CALDA", 
-  "POSTO", "RADIO", "FICHA", "ABUSO", "LOCUS", "LAPIS", "SUPOR", "ZELAR", "GOSTO", "JUDEU", "SUPER", "SUAVE", 
-  "CALAO", "ADVIR", "VERBA", "AGUDO", "DROPS", "EXTRA", "JULIA", "BAIXO", "MOLHO", "RETEM", "TORSO", "PIADA", 
-  "PRIVE", "FACHO", "SITIO", "PEITO", "RUINA", "TURMA", "VINHA", "VOSSO", "PASSA", "IGNEO", "TRACO", "PODIO", 
-  "ASILO", "AVIDA", "PILAR", "ESTIO", "ORFAO", "COMBO", "LIGHT", "CHAMA", "TURVO", "MOSTO", "MUSEU", "PAREO", 
-  "ACOES", "LOUCA", "REFEM", "POETA", "AMENA", "LASSO", "ACOLA", "PISAR", "LOCAL", "OPTAR", "BRABO", "MESMA", 
-  "MEDIR", "FOREM", "BUSCA", "DRAMA", "TESTE", "MEIGO", "ERETO", "METIE", "FINDA", "POEMA", "CLIMA", "TENTO", 
-  "AVISO", "GERAL", "FOLGA", "CUTIS", "HOBBY", "AUTOS", "CORAL", "SURJA", "FACTO", "COCHO", "AMIGA", "RUMOR", 
-  "FEROZ", "ROUCA", "PEDRA", "TACHA", "CALMO", "IDOSO", "PAIRA", "CETRO", "RUBRO", "BOATO", "VOLTA", "PACTO", 
-  "URGIA", "ACUDE", "LICAO", "GOLPE", "MOVEL", "MONGE", "CRIME", "FEUDO", "MANGA", "ECOAR", "ATEIA", "CORSO", 
-  "EBANO", "DAQUI", "RISTE", "CARTA", "CLEAN", "ARTUR", "CASAR", "FALHA", "PONHA", "TETRA", "NATAL", "BENCA", 
-  "MONTE", "SALDO", "ESCOL", "VERDE", "AROMA", "CONTO", "CACHO", "BRIGA", "VETAR", "ITENS", "TARDE", "HOSTE", 
-  "VIGIA", "GRAMA", "FORUM", "PLUMO", "TRIBO", "MANGA", "PASMO", "ORNAR", "AMADA", "VENTO", "LETAL", "TROCA", 
-  "FAZIA", "PEDRO", "SOSIA", "SUCIA", "CHEFE", "UNICA", "CIVIL", "RIVAL", "UTEIS", "FRUTO", "NUVEM", "ORGAO", 
-  "PINHO", "TCHAU", "JOGAR", "PLAGA", "ROUPA", "VENHA", "SARAU", "VAZAO", "JEJUM", "ATIMO", "AREIA", "PLEBE", 
-  "PENTA", "BERRO", "VIRAR", "ARADO", "NESSE", "CARGO", "SWING", "SEIXO", "MIDIA", "COVER", "PERTO", "FOSSO", 
-  "CATRE", "MACRO", "LESSE", "STAND", "GIRIA", "MAGNA", "BRUTO", "ROCHA", "TODAS", "TUTOR", "VAROA", "LEGUA", 
-  "BEIJO", "AXILA", "TICAO", "TIVER", "CALOR", "TROCA", "FINJO", "INTER", "FARTA", "RENDA", "POMAR", "ASSAR", 
-  "TENHA", "BRUTA", "GABAR", "TRAJE", "SANTO", "DESTE", "ARFAR", "CLOSE", "XUCRO", "VADIO", "DANCA", "TRATO", 
-  "SURTO", "ESTRO", "PORTE", "AMADO", "AMBAR", "NESSA", "GURIA", "VERAO", "LOGOS", "SILVO", "PERCO", "RURAL", 
-  "ODIAR", "CHULA", "VIRAM", "FEITA", "AGAPE", "CENHO", "AVIAR", "MAMAE", "DEPOR", "VISTA", "LAUDO", "CANTO", 
-  "MARCA", "NEGAR", "NESTA", "VEDAR", "ETAPA", "QUAIS", "GROTA", "BAZAR", "FOSSA", "BOLSA", "MINAR", "SALMO", 
-  "CERCA", "PAVOR", "DENSA", "CHEIA", "CANSO", "CIFRA", "COROA", "RECEM", "URDIR", "REGIO", "IRADO", "CLERO", 
-  "VISTO", "VAGAR", "CINTO", "BURRA", "LETRA", "JAZER", "HORTO", "ESGAR", "RUIDO", "FERPA", "SOFIA", "INVES", 
-  "LARGO", "BUCHO", "FOLHA", "SIMIO", "MOLDE", "PROTO", "SEGAR", "SOTAO", "LESAO", "FINAL", "PAIOL", "PUGNA", 
-  "UBERE", "TRAGO", "FUNDO", "PENSO", "VELHA", "FAROL", "QUEDA", "LESTO", "MORFO", "ALAMO", "NARCO", "VASTA", 
-  "UFANO", "LINHA", "ARDIS", "OLHOS", "TROCO", "CEITA", "PASMA", "APEAR", "PICHE", "PODAR", "FOLIA", "DERAM", 
-  "PRECO", "POLIS", "AUDIO", "UMIDO", "BULIR", "VIGER", "TROCO", "FROTA", "OUTRA", "MOCHO", "PEITA", "NESTE", 
-  "CHAVE", "DISSO", "MONTA", "MATAR", "ILESO", "COSMO", "RESTO", "SEIVA", "MANTO", "CHAGA", "REDOR", "SACAR", 
-  "FALSA", "RETRO", "BARRO", "MOVER", "MISTO", "BOLSO", "LIMPO", "BEDEL", "LABIA", "VAZIA", "CIVEL", "CAMPA", 
-  "LOUCA", "VELOZ", "NARIZ", "LOURO", "LONGO", "SAMBA", "BARAO", "TOQUE", "LOGIA", "NACAR", "SABOR", "DADOS", 
-  "ALBUM", "LUTAR", "MIMAR", "JUSTA", "ZUMBI", "AXIAL", "LUCRO", "MACHO", "GEMER", "BANTO", "COEVO", "PAGAR", 
-  "PORCA", "DIABO", "RENTE", "PUNHA", "ARROZ", "ENJOO", "SUBIR", "CALCA", "URGIR", "FARTO", "SALVA", "XAMPU", 
-  "FINDO", "LOUSA", "CALVO", "VENHO", "VALER", "FOCAR", "PLUMA", "BAIXA", "FATUO", "OUSAR", "SABIA", "BRUXA", 
-  "SEXTO", "PULAR", "FIRMA", "HIFEN", "REPOR", "SIGLA", "TORNA", "FORRO", "LENTO", "CORTE", "CARDO", "BUGRE", 
-  "SOLTA", "CHOCA", "FEIRA", "GUETO", "VOILA", "RELER", "MANIA", "CUSTO", "TENIS", "CORAR", "NESGA", "FUGIU", 
-  "VARIO", "FAZES", "SADIO", "DEMAO", "CANIL", "FERIR", "RACIO", "VERSA", "HAREM", "MODAL", "SOCIO", "PUIDO", 
-  "SUGAR", "MIOPE", "DIGNA", "CEIFA", "PATIO", "TUMBA", "ABRIL", "ADORO", "AGUIA", "ALEGA", "ANEXA", "ANJOS", 
-  "ARENA", "ARMAR", "ATLAS", "AVISA", "BALDE", "BANCO", "BANHO", "BARCO", "BATOM", "BEBER", "BOLAS", "BONDE", 
-  "BRACO", "CABRA", "CINCO", "COBRA", "DEDOS", "DEUSA", "ELMOS", "FERRO", "FRUTA", "FUMAR", "GATOS", "HORAS",
-  "ILHAS", "LAGOA", "LARGA", "MAPAS", "MARES", "MESAS", "METAL", "MOEDA", "NADAR", "PADRE", "PALCO", "PONTE", 
-  "PRATO", "SALTO", "SERRA", "TIGRE", "TORRE", "TRAVA", "TRIGO", "VIDRO", "VIOLA", "VOZES", "ZEBRA"];
+  const WORDS = ["ABATE", "ABRAS", "ABRIL", "ABRIR", "ABUSO", "ACASO", "ACENO", "ACESA", "ACESO", "ACHAR", "ACIMA", "ACOES",
+  "ACOLA", "ACUDE", "ACUDO", "ADEUS", "ADIAR", "ADORO", "ADVEM", "ADVIR", "AFAGO", "AFETO", "AFIAR", "AFINS", "AFLUI", "AFORA", 
+  "AGAPE", "AGITA", "AGORA", "AGUAR", "AGUDO", "AGUIA", "AINDA", "AJUDA", "ALADO", "ALAMO", "ALBUM", "ALCAR", "ALEGA", "ALGOZ", 
+  "ALGUM", "ALIAS", "ALIBI", "ALMAS", "ALTAR", "ALUDE", "ALUNO", "ALVOS", "AMADA", "AMADO", "AMAGO", "AMBAR", "AMBAS", "AMBOS", 
+  "AMENA", "AMENO", "AMIGA", "AMIGO", "AMPLA", "AMPLO", "ANAIS", "ANCIA", "ANDAR", "ANEIS", "ANELO", "ANEXA", "ANEXO", "ANIMO", 
+  "ANJOS", "ANSIA", "ANTES", "ANTRO", "ANUIR", "AONDE", "APAGA", "APEAR", "APEGO", "APELO", "APICE", "APITO", "APOIO", "APURA", 
+  "AQUEM", "ARADO", "ARCAR", "ARDIL", "ARDIS", "ARDOR", "ARDUO", "AREAL", "AREIA", "ARENA", "ARFAR", "ARGUA", "ARIDO", "ARMAR", 
+  "AROMA", "ARRAR", "ARROZ", "ARTUR", "ASILO", "ASPAS", "ASSAR", "ASSAZ", "ASSIM", "ASTRA", "ASTRO", "ATACA", "ATADO", "ATEAR", 
+  "ATEIA", "ATIMO", "ATINA", "ATIVO", "ATLAS", "ATOMO", "ATRAS", "ATRIO", "ATROZ", "ATUAL", "ATUAR", "ATUOU", "AUDAZ", "AUDIO", 
+  "AULAS", "AUREA", "AUREO", "AUTOR", "AUTOS", "AVARO", "AVIAO", "AVIAR", "AVIDA", "AVIDO", "AVISA", "AVISO", "AXIAL", "AXILA", 
+  "AZEVE", "BACIA", "BAILE", "BAITA", "BAIXA", "BAIXE", "BAIXO", "BALAO", "BALDE", "BAMBU", "BANAL", "BANCO", "BANDO", "BANHO", 
+  "BANTO", "BANZO", "BARAO", "BARBA", "BARCA", "BARCO", "BARDO", "BARRA", "BARRO", "BASTA", "BASTO", "BATER", "BATOM", "BAURU", 
+  "BAZAR", "BEATA", "BEBER", "BEBIA", "BEDEL", "BEIJO", "BELGA", "BENCA", "BERCO", "BERRO", "BESTA", "BETAO", "BICAR", "BICHO", 
+  "BILHA", "BINGO", "BIOMA", "BIRRA", "BISCO", "BISPO", "BLASE", "BLUSA", "BOATE", "BOATO", "BOCAL", "BOINA", "BOLAS", "BOLHA", 
+  "BOLSA", "BOLSO", "BONDE", "BONUS", "BORDA", "BORRA", "BOTAO", "BOTAR", "BRABO", "BRACO", "BRADO", "BRASA", "BRAVA", "BRAVO", 
+  "BREGA", "BREJO", "BREVE", "BRIGA", "BRISA", "BROCA", "BROTO", "BRUMA", "BRUTA", "BRUTO", "BRUXA", "BUCHO", "BUGRE", "BULIR", 
+  "BUNDA", "BURRA", "BURRO", "BUSCA", "CABAL", "CABER", "CABOS", "CABRA", "CACAO", "CACAR", "CACHO", "CADEA", "CAFES", "CAIAR", 
+  "CAIXA", "CAIXO", "CALAO", "CALAR", "CALCA", "CALCO", "CALDA", "CALHA", "CALMA", "CALMO", "CALOR", "CALVA", "CALVO", "CAMAS", 
+  "CAMPA", "CAMPO", "CANIL", "CANOA", "CANON", "CANSO", "CANTO", "CAPAZ", "CAPIM", "CAPUZ", "CARDO", "CARGO", "CARMA", "CARPA", 
+  "CARRO", "CARTA", "CARVA", "CASAL", "CASAR", "CASCA", "CASCO", "CASTA", "CASTE", "CASTO", "CATRE", "CAUDA", "CAUSA", "CEDER", 
+  "CEGAR", "CEIFA", "CEITA", "CELTA", "CENHO", "CENSO", "CERCA", "CERNE", "CEROL", "CERTA", "CERTO", "CERVO", "CESTA", "CETRO", 
+  "CHAGA", "CHAMA", "CHAPA", "CHATA", "CHATO", "CHAVE", "CHEFE", "CHEGA", "CHEIA", "CHEIO", "CHOCA", "CHORA", "CHULA", "CHULO", 
+  "CHUPO", "CHUVA", "CICLO", "CIFRA", "CILHA", "CINCO", "CINTO", "CINZA", "CIOSO", "CISAO", "CISMA", "CITAR", "CIUME", "CIVEL", 
+  "CIVIL", "CLARO", "CLAVA", "CLEAN", "CLERO", "CLIMA", "CLOSE", "CLUBE", "COBRA", "COBRE", "COCAR", "COCHO", "COESA", "COESO", 
+  "COEVO", "COFRE", "COISA", "COITO", "COLAR", "COLHE", "COMBO", "COMER", "COMUM", "CONTA", "CONTO", "COPIA", "COPOS", "CORAL", 
+  "CORAR", "CORDA", "CORJA", "CORNO", "COROA", "CORPO", "CORSA", "CORSO", "CORTE", "COSER", "COSMO", "COSTA", "COURO", "COUSA", 
+  "COVAS", "COVER", "COVIL", "COZER", "CRAVO", "CREDO", "CRIAR", "CRIME", "CRISE", "CRIVO", "CROMO", "CRUEL", "CUBRO", "CULPA", 
+  "CULTO", "CUNHO", "CURAR", "CURSO", "CUSTO", "CUTIS", "DADOS", "DANCA", "DAQUI", "DARDO", "DEBIL", "DEDAL", "DEDOS", "DEITA", 
+  "DEIXA", "DEMAO", "DENGO", "DENSA", "DENSO", "DENTE", "DEPOR", "DERAM", "DESDE", "DESSA", "DESSE", "DESTA", "DESTE", "DETEM", 
+  "DETER", "DEUSA", "DEVER", "DEVIR", "DIABO", "DICAS", "DIETA", "DIGNA", "DIGNO", "DINAR", "DISSO", "DIZER", "DOBRA", "DOCIL", 
+  "DOGMA", "DOIDO", "DONDO", "DONOS", "DORSO", "DOUTO", "DRAGA", "DRAMA", "DRENO", "DROGA", "DROPS", "DUBIO", "DUNAS", "DUPLA", 
+  "EBANO", "EBRIO", "ECOAR", "EDUCA", "EGIDE", "ELEGE", "ELISA", "ELITE", "ELMOS", "EMBAR", "ENFIM", "ENJOO", "ENTAO", "ENTRA", 
+  "ENTRE", "ENVIO", "EPICO", "EPOCA", "ERETO", "ERGUE", "ESCOL", "ESGAR", "ESPIA", "ESTAO", "ESTAR", "ESTIO", "ESTRE", "ESTRO", 
+  "ETAPA", "ETICA", "ETICO", "ETNIA", "EXALA", "EXAME", "EXATO", "EXIGE", "EXIJO", "EXILA", "EXIME", "EXITO", "EXODO", "EXPIA", 
+  "EXPOR", "EXTRA", "FABIO", "FACAM", "FACAS", "FACHA", "FACHO", "FACIL", "FACTO", "FAINA", "FAIXA", "FALAR", "FALHA", "FALSA", 
+  "FALSO", "FALTA", "FARAO", "FARDO", "FAROL", "FARPA", "FARSA", "FARTA", "FARTO", "FATAL", "FATOR", "FATOS", "FATUO", "FAUNA", 
+  "FAVOR", "FAZER", "FAZES", "FAZIA", "FEIRA", "FEITA", "FEITO", "FEIXE", "FELIZ", "FENDA", "FENIX", "FERAS", "FERIR", "FEROZ", 
+  "FERPA", "FERRO", "FESTA", "FEUDO", "FIBRA", "FICAR", "FICHA", "FILHO", "FILME", "FINAL", "FINCA", "FINDA", "FINDO", "FINJO", 
+  "FIRMA", "FIRME", "FISCO", "FITAR", "FIXAR", "FLAME", "FLEXA", "FLIPA", "FLORA", "FLUIR", "FLUXO", "FOCAR", "FOGAO", "FOLGA", 
+  "FOLHA", "FOLIA", "FONTE", "FORCA", "FOREM", "FORJA", "FORMA", "FORNO", "FORRO", "FORTE", "FORUM", "FOSCA", "FOSSA", "FOSSE", 
+  "FOSSO", "FRACO", "FRASE", "FREIO", "FRESA", "FRISA", "FROTA", "FRUIR", "FRUTA", "FRUTO", "FUGAZ", "FUGIR", "FUGIU", "FUMAR", 
+  "FUNDO", "FUNIL", "FUROR", "FURTO", "FUSAO", "FUSCA", "FUTIL", "GABAR", "GAITA", "GALHO", "GANHO", "GARBO", "GARFO", "GAROA", 
+  "GARRA", "GASTA", "GATOS", "GELAR", "GEMAS", "GEMER", "GENIO", "GENRO", "GENTE", "GERAL", "GERAR", "GERIR", "GESSO", "GESTO", 
+  "GIRAR", "GIRIA", "GIZAR", "GLEBA", "GLIFO", "GLOSA", "GOLFO", "GOLPE", "GORRO", "GOSTO", "GOZAR", "GRACA", "GRADE", "GRAMA", 
+  "GRATA", "GRATO", "GRAVE", "GROTA", "GRUPO", "GRUTA", "GUETO", "GUIAR", "GUISA", "GURIA", "HABIL", "HAREM", "HASTE", "HAVER", 
+  "HAVIA", "HEROI", "HIATO", "HIFEN", "HOBBY", "HOMEM", "HONRA", "HORAS", "HORDA", "HORTO", "HOSTE", "HOTEL", "HOUVE", "HUMOR", 
+  "HUMUS", "ICONE", "IDEAL", "IDEAR", "IDEIA", "IDOLO", "IDOSO", "IGNEO", "IGREJ", "IGUAL", "ILESO", "ILHAS", "IMERS", "IMPAR", 
+  "IMPIO", "IMPOR", "IMUNE", "INATA", "INATO", "INDIO", "INDUZ", "INGLE", "INIBE", "INJET", "INTER", "INVES", "IRADO", "IRMAO", 
+  "ITENS", "JANTA", "JARRA", "JAZER", "JAZIA", "JEITO", "JEJUM", "JIRAU", "JOGAR", "JOGOS", "JORRO", "JOVEM", "JUDEU", "JUIZO", 
+  "JULGO", "JULIA", "JUNCO", "JUNTA", "JUNTO", "JUSTA", "JUSTO", "LABIA", "LABOR", "LACRE", "LAGAR", "LAGOA", "LAICO", "LANCA", 
+  "LAPIS", "LAPSO", "LARGA", "LARGO", "LARVA", "LASCA", "LASSO", "LATIR", "LAUDO", "LAVRA", "LAZER", "LEBRE", "LEGAL", "LEGUA", 
+  "LEIGO", "LEITE", "LEITO", "LENDA", "LENHA", "LENTO", "LERDO", "LERIA", "LESAO", "LESSE", "LESTE", "LESTO", "LETAL", "LETRA", 
+  "LEVAR", "LIAME", "LIBRA", "LICAO", "LIDAR", "LIDER", "LIGAR", "LIGHT", "LIMAR", "LIMBO", "LIMPA", "LIMPO", "LINDA", "LINDO", 
+  "LINHA", "LIRIO", "LIVRE", "LIVRO", "LIXAR", "LOBOS", "LOCAL", "LOCUS", "LODOS", "LOGIA", "LOGOS", "LOGRO", "LOJAS", "LONGE", 
+  "LONGO", "LORDO", "LOUCA", "LOUCO", "LOURO", "LOUSA", "LOUVA", "LUCRO", "LUGAR", "LUNAR", "LUTAR", "MACHO", "MACIO", "MACRO", 
+  "MAGIA", "MAGNA", "MAGOA", "MAIOR", "MALTA", "MAMAE", "MANGA", "MANHA", "MANIA", "MANSO", "MANTO", "MAPAS", "MARCA", "MARCO", 
+  "MARES", "MASSA", "MATAR", "MATIZ", "MEDIR", "MEIGA", "MEIGO", "MENOS", "MENTE", "MERCE", "MESAS", "MESES", "MESMA", "MESMO", 
+  "MESSE", "METAL", "METIE", "MEXER", "MIDIA", "MIMAR", "MINAR", "MINHA", "MIOPE", "MISTO", "MOCAO", "MOCHO", "MODAL", "MOEDA", 
+  "MOLDE", "MOLHO", "MONGE", "MONTA", "MONTE", "MORAL", "MORAR", "MORFO", "MORRO", "MORTE", "MOSTO", "MOTIM", "MOVEL", "MOVER", 
+  "MUDAR", "MUITO", "MUNDO", "MUSEU", "MUTUA", "MUTUO", "NACAO", "NACAR", "NADAR", "NARCO", "NARIZ", "NATAL", "NAVIO", "NEGAR", 
+  "NEGRO", "NENEM", "NESGA", "NESSA", "NESSE", "NESTA", "NESTE", "NICHO", "NIVEL", "NOBRE", "NOCAO", "NODOA", "NOITE", "NORMA", 
+  "NOSSA", "NOSSO", "NUNCA", "NUVEM", "OASIS", "OBICE", "OBITO", "OBTER", "OBVIO", "OCASO", "ODIAR", "OLHAR", "OLHOS", "ONTEM", 
+  "OPACO", "OPCAO", "OPTAR", "ORDEM", "ORFAO", "ORGAO", "ORNAR", "OTICA", "OTIMO", "OUSAR", "OUTRA", "OUTRO", "OUVIR", "OXALA", 
+  "PACTO", "PADRE", "PAGAO", "PAGAR", "PAIOL", "PAIRA", "PAJEM", "PALCO", "PAPEL", "PARAR", "PARCA", "PARCO", "PARDO", "PAREO", 
+  "PARIA", "PARTE", "PARVA", "PARVO", "PASMA", "PASMO", "PASSA", "PASSO", "PATIO", "PAUTA", "PAVOR", "PECHA", "PEDIR", "PEDRA", 
+  "PEGAR", "PEITA", "PEITO", "PEIXE", "PENIS", "PENSO", "PENTA", "PERCO", "PERDA", "PERTO", "PESAR", "PESTE", "PIADA", 
+  "PICHE", "PIFIO", "PILAR", "PINHO", "PINTO", "PIQUE", "PISAR", "PLAGA", "PLANO", "PLATO", "PLEBE", "PLENA", "PLENO", "PLUMA", 
+  "PLUMO", "POBRE", "PODAR", "PODER", "PODIO", "POEMA", "POETA", "POLIS", "POMAR", "POMPA", "PONHA", "PONTE", "PONTO", "PORCA", 
+  "POREM", "PORTA", "PORTE", "POSSA", "POSSE", "POSSO", "POSTO", "POUCO", "PRADO", "PRAGA", "PRAIA", "PRATO", "PRAXE", "PRAZO", 
+  "PRECE", "PRECO", "PRESA", "PRESO", "PRETO", "PRIME", "PRIVE", "PROBO", "PROLE", "PROSA", "PROTO", "PROVA", "PRUMO", "PSICO", 
+  "PUDER", "PUDOR", "PUGNA", "PUIDO", "PULAR", "PULHA", "PUNHA", "PUXAR", "QUAIS", "QUASE", "QUEDA", "QUICA", "QUOTA", "RACIO", 
+  "RADIO", "RAIVA", "RANCO", "RAPAZ", "RAZAO", "REACA", "RECEM", "REDOR", "REFEM", "REGER", "REGIO", "REGRA", "REINO", "RELER", 
+  "RELES", "RELVA", "REMIR", "RENDA", "RENTE", "REPOR", "RESES", "RESTO", "RETEM", "RETER", "RETRO", "REVEL", "REVER", "REVES", 
+  "REZAR", "RIGOR", "RISCO", "RISTE", "RITMO", "RIVAL", "ROCHA", "ROGAR", "ROUCA", "ROUND", "ROUPA", "RUBRO", "RUIDO", "RUINA", 
+  "RUMOR", "RURAL", "SABER", "SABIA", "SABIO", "SABOR", "SACAR", "SADIO", "SAGAZ", "SAIBA", "SAIDA", "SALDO", "SALMO", "SALTO", 
+  "SALVA", "SALVE", "SALVO", "SAMBA", "SANAR", "SANTO", "SARAU", "SARCA", "SAUDE", "SEARA", "SECAO", "SEGAR", "SEGUE", "SEITA", 
+  "SEIVA", "SEIXO", "SELAR", "SENAO", "SENDA", "SENDO", "SENIL", "SENSO", "SENTE", "SERAO", "SERIE", "SERIO", "SERRA", "SERVO", 
+  "SESTA", "SETOR", "SEXTA", "SEXTO", "SIGLA", "SIGNO", "SILVO", "SIMIO", "SINAL", "SINHA", "SINTO", "SITIO", "SOBRE", "SOCIO", 
+  "SOFIA", "SOLDO", "SOLTA", "SOLTO", "SONHO", "SONSA", "SONSO", "SORTE", "SOSIA", "SOTAO", "STAND", "SUAVE", "SUBIR", "SUCIA", 
+  "SUGAR", "SULCO", "SUMIR", "SUPER", "SUPOR", "SUPRA", "SURJA", "SURTO", "SUTIL", "SWING", "TACHA", "TANGE", "TANTO", "TARDE", 
+  "TCHAU", "TECER", "TEDIO", "TEMER", "TEMOR", "TEMPO", "TENAZ", "TENDE", "TENDO", "TENHA", "TENIS", "TENRA", "TENRO", "TENSO", 
+  "TENTO", "TENUE", "TERMO", "TERNO", "TERRA", "TESTE", "TETRA", "TEXTO", "TICAO", "TIGRE", "TINHA", "TIRAR", "TIVER", "TOADA", 
+  "TOCAR", "TODAS", "TODOS", "TOMAR", "TOQUE", "TORCO", "TORNA", "TORPE", "TORRE", "TORSO", "TOSCO", "TRACO", "TRAGA", "TRAGO", 
+  "TRAJE", "TRAMA", "TRATO", "TRAVA", "TRETA", "TRIBO", "TRIGO", "TROCA", "TROCO", "TRUPE", "TUMBA", "TURBA", "TURMA", "TURVA", 
+  "TURVO", "TUTOR", "UBERE", "UFANO", "UMIDO", "UNIAO", "UNICA", "UNICO", "URDIR", "URGIA", "URGIR", "USURA", "UTEIS", "VACUO", 
+  "VADIO", "VAGAR", "VALER", "VALHA", "VALIA", "VALOR", "VARAO", "VARIO", "VAROA", "VASTA", "VASTO", "VAZAO", "VAZIA", "VAZIO", 
+  "VEDAR", "VELAR", "VELHA", "VELHO", "VELOZ", "VEMOS", "VENAL", "VENDO", "VENHA", "VENHO", "VENIA", "VENTO", "VERAO", "VERBA", 
+  "VERBO", "VERDE", "VERSA", "VERSO", "VERVE", "VETAR", "VETOR", "VEZES", "VICIO", "VIDEO", "VIDRO", "VIGER", "VIGIA", "VIGOR", 
+  "VILAO", "VIMOS", "VINHA", "VIOLA", "VIRAM", "VIRAO", "VIRAR", "VIRIA", "VIRIL", "VIRUS", "VISAO", "VISAR", "VISSE", "VISTA", 
+  "VISTO", "VITAL", "VIVAZ", "VIVER", "VOILA", "VOLTA", "VORAZ", "VOSSO", "VOZES", "VULGO", "VULTO", "XAMPU", "XEQUE", "XIBIU", 
+  "XUCRO", "ZEBRA", "ZELAR", "ZUMBI"]
+
+  const WORDS_SET = new Set(WORDS);
 
 
   const MAX_TRIES = 7;
@@ -530,7 +538,7 @@
       if(g.revealed){
         document.getElementById("stats-" + r).innerHTML =
           `<span><span class="dot c"></span>${counts.correct} na posição certa</span>` +
-          `<span><span class="dot p"></span>${counts.present} na posição errada</span>` +
+          `<span><span class="dot p"></span>${counts.present} na palavra, posição errada</span>` +
           `<span><span class="dot a"></span>${counts.absent} não estão na palavra</span>`;
       }
     });
@@ -557,6 +565,14 @@
     if(r !== guesses.length) return; // só a linha atual pode ser editada
     cursorPos = c;
     render();
+    focusHiddenInput();
+  }
+
+  function focusHiddenInput(){
+    const input = document.getElementById("hiddenInput");
+    if(!input) return;
+    input.value = "";
+    input.focus({ preventScroll: true });
   }
 
   function updateKeyboardColors(){
@@ -598,6 +614,11 @@
       return;
     }
     const word = currentGuess.join("");
+    if(!WORDS_SET.has(word)){
+      showMessage("Essa palavra não está na lista. Tente outra.");
+      shakeRow(guesses.length);
+      return;
+    }
     for(let i=0; i<WORD_LEN; i++){
       keyState[word[i]] = "used";
     }
@@ -682,7 +703,10 @@
     });
   });
 
+  const hiddenInput = document.getElementById("hiddenInput");
+
   document.addEventListener("keydown", (e) => {
+    if(e.target === hiddenInput) return; // evita processar a tecla duas vezes
     let k = e.key.toUpperCase();
     if(k === "ENTER"){
       e.preventDefault();
@@ -700,6 +724,32 @@
       k = normalize(k);
       if(/^[A-Z]$/.test(k)) handleKey(k);
     }
+  });
+
+  hiddenInput.addEventListener("input", (e) => {
+    const raw = e.target.value;
+    e.target.value = "";
+    if(!raw) return;
+    const letter = normalize(raw.slice(-1));
+    if(/^[A-Z]$/.test(letter)) handleKey(letter);
+  });
+  hiddenInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      handleKey("ENTER");
+    } else if(e.key === "Backspace" && !e.target.value){
+      e.preventDefault();
+      handleKey("BACK");
+    } else if(e.key === "ArrowLeft"){
+      e.preventDefault();
+      moveCursor(-1);
+    } else if(e.key === "ArrowRight"){
+      e.preventDefault();
+      moveCursor(1);
+    }
+  });
+  document.getElementById("grid").addEventListener("click", () => {
+    if(!gameOver) focusHiddenInput();
   });
 
   document.getElementById("btnDaily").addEventListener("click", (e) => { startGame("daily"); e.currentTarget.blur(); });
